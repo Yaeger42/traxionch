@@ -15,4 +15,4 @@ class URL(URLBase):
 
 class URLInfo(URL):
     url: str
-    admin_url: str
+    # admin_url: str
