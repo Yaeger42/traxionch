@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: uvicorn shortener_app.main:app --host 0.0.0.0 --port 80
+    container_name: api
+    volumes:
+      - .:/code
+    ports:
+      - 80:80
+    

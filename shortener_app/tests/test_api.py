@@ -1,50 +1,9 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, StaticPool
-from sqlalchemy.orm import sessionmaker, Session
-from ..main import app, get_db
-from ..database import Base
-from ..models import URL
-from ..crud import get_db_url_by_key, create_db_url
-from ..schemas import URLBase
-from typing import Generator
-import pytest
+from sqlalchemy.orm import Session
+from ..main import app
+from .db_fixtures import session
 
 client = TestClient(app)
-DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture
-def session() -> Generator[Session, None, None]:
-    Base.metadata.create_all(bind=engine)
-    db_session = TestingSessionLocal()
-    url_item = URL(
-        id_=1, target_url="https://google.com", is_active=True, clicks=0, key="EYJEA"
-    )
-    db_session.add(url_item)
-    db_session.commit()
-    yield db_session
-    db_session.close()
-    Base.metadata.drop_all(bind=engine)
-
-
-def teardown():
-    Base.metadata.drop_all(bind=engine)
-
-
-def overrride_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = overrride_get_db
 
 
 def test_read_root():
@@ -75,17 +34,3 @@ def test_existing_key_url_returns_result(session: Session):
     assert data["id_"] == 1
     assert data["key"] == "EYJEA"
     assert data["target_url"] == "https://google.com"
-
-
-def test_create_db_url(session: Session):
-    url_base = URLBase(target_url="https://example.com")
-    db_url = create_db_url(session, url_base)
-    assert db_url.id_ is not None
-    assert db_url.clicks == 0
-    assert db_url.is_active == True
-    assert db_url.key is not None
-
-
-def test_get_url_by_key(session: Session):
-    item = get_db_url_by_key(session, "EYJEA")
-    assert item.key == "EYJEA"
