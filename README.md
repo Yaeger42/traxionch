@@ -19,3 +19,6 @@ There you'll find 4 endpoints:
 
 ## How to run the tests
  - With the project running, execute: `docker exec -it api pytest -s`
+
+## How to check code coverage
+ - Instead of executing `docker exec -it api pytest -s`, run `docker exec -it api coverage run -m pytest`

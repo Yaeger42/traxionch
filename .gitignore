@@ -3,3 +3,4 @@ __pycache__
 shortener.db
 .env
 .pytest_cache
+.coverage
